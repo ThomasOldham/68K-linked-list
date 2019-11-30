@@ -1,0 +1,89 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.04
+Created On: 11/29/2019 11:18:04 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7      ORG    $1000
+00001000                             8      
+00001000  =00000006                  9  trap_p_char equ 6
+00001000  =0000000D                 10  trap_p_nullterm_crlf equ 13
+00001000                            11  
+00001000  =00000002                 12  node_next equ 2 ; offset within a node struct of the pointer to the next node
+00001000                            13  
+00001000                            14  START:                  ; first instruction of program
+00001000                            15  
+00001000  4EB9 00001010             16      jsr print_list * Print initial state of the list.
+00001006                            17      
+00001006                            18      * Insert sorting implementation here.
+00001006                            19      
+00001006  4EB9 00001010             20      jsr print_list * Print the now-sorted list.
+0000100C  FFFF FFFF                 21      SIMHALT
+00001010                            22  
+00001010                            23  * SUBROUTINE
+00001010                            24  * Prints the list.
+00001010                            25  print_list
+00001010  48E7 E040                 26      movem.l D0/D1/D2/A1, -(SP)
+00001014  43F9 00001038             27      lea.l list_head, A1
+0000101A                            28  pl_loop
+0000101A  2411                      29      move.l (A1), D2
+0000101C  4A82                      30      tst.l D2
+0000101E  6700 000E                 31      beq pl_cleanup
+00001022  2251                      32      move.l (A1), A1
+00001024  1211                      33      move.b (A1), D1
+00001026  7006                      34      move.l #trap_p_char, D0
+00001028  4E4F                      35      trap #15
+0000102A  5489                      36      add.l #node_next, A1
+0000102C  60EC                      37      bra pl_loop
+0000102E                            38  pl_cleanup
+0000102E  700D                      39      move.l #trap_p_nullterm_crlf, D0
+00001030  4E4F                      40      trap #15
+00001032  4CDF 0207                 41      movem.l (SP)+, D0/D1/D2/A1
+00001036  4E75                      42      rts
+00001038                            43  
+00001038                            44  * Put variables and constants here
+00001038                            45  
+00001038                            46  list_head ; pointer to the first node in the list
+00001038= 0000103C                  47      dc.l b_node
+0000103C                            48  b_node
+0000103C= 62                        49      dc.b 'b'
+0000103E= 00001042                  50      dc.l a_node
+00001042                            51  a_node
+00001042= 61                        52      dc.b 'a'
+00001044= 00001054                  53      dc.l e_node
+00001048                            54  c_node
+00001048= 63                        55      dc.b 'c'
+0000104A= 00000000                  56      dc.l 0
+0000104E                            57  d_node
+0000104E= 64                        58      dc.b 'd'
+00001050= 00001048                  59      dc.l c_node
+00001054                            60  e_node
+00001054= 65                        61      dc.b 'e'
+00001056= 0000104E                  62      dc.l d_node
+0000105A                            63      
+0000105A                            64      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+A_NODE              1042
+B_NODE              103C
+C_NODE              1048
+D_NODE              104E
+E_NODE              1054
+LIST_HEAD           1038
+NODE_NEXT           2
+PL_CLEANUP          102E
+PL_LOOP             101A
+PRINT_LIST          1010
+START               1000
+TRAP_P_CHAR         6
+TRAP_P_NULLTERM_CRLF  D
