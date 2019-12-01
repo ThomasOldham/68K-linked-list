@@ -130,7 +130,7 @@ merge_less_or_equal
             * Go to next on left list.
             move.l (A5), A5
             addq.l #node_next, A5
-        bra merge_loop
+    bra merge_loop
     
 merge_left_empty
     * Append the right list to the end of the left list.
