@@ -26,7 +26,7 @@ START:                  ; first instruction of program
 * Pass a double pointer to the head of a linked list to A6.L.
 * Sorts the linked list.
 merge_sort
-    movem.l D7/A0/A5, -(SP)
+    movem.l D7/A0/A5/A6, -(SP)
     * Check if the list is size 1.
     * All lists of size 1 are sorted.
     jsr length
@@ -37,16 +37,16 @@ merge_sort
         move.l A6, A5
         jsr split
         * Sort the two halves.
+        move.l A6, -(SP)
+        move.l SP, A6
         jsr merge_sort
-        move.l A6, A0
         move.l A5, A6
         jsr merge_sort
-        move.l A0, A6
+        move.l (SP)+, A6
         * Merge the two sorted halves.
         jsr merge
-        move.l A5, A6
 ms_sorted
-    movem.l (SP)+, D7/A0/A5
+    movem.l (SP)+, D7/A0/A5/A6
     rts
 
 * SUBROUTINE
@@ -88,7 +88,6 @@ split_loop
     bra split_loop
 split_cleanup
     move.l (A6), A5
-    addq.l #node_next, A6
     clr.l (A6)
     move.l A5, A6
     movem.l (SP)+, D7/A5
@@ -143,7 +142,7 @@ merge_right_empty
     * Everything has been merged into the left list--nothing left to do.
     * Fallthrough to merge_cleanup.
 merge_cleanup
-    movem.l (SP)+, A2/A3/A5
+    movem.l (SP)+, D2/D3/A2/A3/A5
     rts
     
 * SUBROUTINE
