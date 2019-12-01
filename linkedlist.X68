@@ -38,13 +38,15 @@ merge_sort
         jsr split
         * Sort the two halves.
         move.l A6, -(SP)
-        move.l SP, A6
+        move.l SP, A0
+        move.l A0, A6
         jsr merge_sort
         move.l A5, A6
         jsr merge_sort
-        move.l (SP)+, A6
+        move.l A0, A6
         * Merge the two sorted halves.
         jsr merge
+        move.l (SP)+, A6
 ms_sorted
     movem.l (SP)+, D7/A0/A5/A6
     rts
@@ -108,24 +110,20 @@ merge_loop
     tst.l (A6)
     beq merge_right_empty
         move.l (A5), A2
-        move.l (A2), D2
+        move.b (A2), D2
         move.l (A6), A3
-        move.l (A3), D3
+        move.b (A3), D3
         cmp.b D3, D2
         ble merge_less_or_equal
 merge_greater
-            * Store head of right list.
-            move.l A6, A2
-            * Go to next on right list.
+            * Store the "next" of the right list.
+            move.l (A6), A2
+            addq.l #node_next, A2
+            * Insert the head of the right list into the left list.
             move.l (A6), A6
-            addq.l #node_next, A6
-            * Prepend stored node to left list.
-            ** Change stored node's next to left list head.
-            move.l (A2), A3
-            addq.l #node_next, A3
-            move.l (A5), (A3)
-            ** Make the left list head double pointer point to the stored node.
-            move.l (A2), (A5)
+            jsr insert
+            * Replace the right list with the stored head.
+            move.l A2, A6
             * We just moved back up one in the left list, so fallthrough to
             * move back down.
 merge_less_or_equal
@@ -143,6 +141,23 @@ merge_right_empty
     * Fallthrough to merge_cleanup.
 merge_cleanup
     movem.l (SP)+, D2/D3/A2/A3/A5
+    rts
+
+* SUBROUTINE
+* Pass a pointer to the "next" field of the node to insert after to A5.
+* Pass a pointer to the node to insert to A6.
+insert
+    move.l A0, -(SP)
+    move.l A6, A0
+    addq.l #node_next, A0   ; A0 now points to the "next" field of the node
+                            ; we're inserting.
+    * Move the node currently pointed to by the passed "next" to the "next"
+    * of the node that's getting inserted before it.
+    move.l (A5), (A0)
+    * Replace the moved node with the one passed to A6.
+    move.l A6, (A5)
+    * Cleanup.
+    move.l (SP)+, A0
     rts
     
 * SUBROUTINE
@@ -175,7 +190,7 @@ b_node
     dc.l a_node
 a_node
     dc.b 'a'
-    dc.l e_node
+    dc.l 0 ;e_node
 c_node
     dc.b 'c'
     dc.l 0
@@ -187,6 +202,8 @@ e_node
     dc.l d_node
     
     END    START        ; last line of source
+
+
 
 *~Font name~Courier New~
 *~Font size~10~

@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.15.04
-Created On: 11/30/2019 4:54:13 PM
+Created On: 11/30/2019 9:17:35 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :
@@ -17,13 +17,13 @@ Created On: 11/30/2019 4:54:13 PM
 00001000                            13  
 00001000                            14  START:                  ; first instruction of program
 00001000                            15  
-00001000  4EB9 000010CE             16      jsr print_list * Print initial state of the list.
+00001000  4EB9 000010E0             16      jsr print_list * Print initial state of the list.
 00001006                            17      
 00001006                            18      * Insert sorting implementation here.
-00001006  4DF9 000010F6             19      lea.l list_head, A6
+00001006  4DF9 00001108             19      lea.l list_head, A6
 0000100C  4EB9 0000101C             20      jsr merge_sort
 00001012                            21      
-00001012  4EB9 000010CE             22      jsr print_list * Print the now-sorted list.
+00001012  4EB9 000010E0             22      jsr print_list * Print the now-sorted list.
 00001018  FFFF FFFF                 23      SIMHALT
 0000101C                            24  
 0000101C                            25  * SUBROUTINE
@@ -33,164 +33,179 @@ Created On: 11/30/2019 4:54:13 PM
 0000101C  48E7 0186                 29      movem.l D7/A0/A5/A6, -(SP)
 00001020                            30      * Check if the list is size 1.
 00001020                            31      * All lists of size 1 are sorted.
-00001020  4EB9 00001054             32      jsr length
+00001020  4EB9 00001058             32      jsr length
 00001026  BEBC 00000001             33      cmp.l #1, D7
-0000102C  6F00 0020                 34      ble ms_sorted
+0000102C  6F00 0024                 34      ble ms_sorted
 00001030                            35      * else
 00001030                            36          * Split the list.
 00001030  2A4E                      37          move.l A6, A5
-00001032  4EB9 00001072             38          jsr split
+00001032  4EB9 00001076             38          jsr split
 00001038                            39          * Sort the two halves.
 00001038  2F0E                      40          move.l A6, -(SP)
-0000103A  2C4F                      41          move.l SP, A6
-0000103C  4EB8 101C                 42          jsr merge_sort
-00001040  2C4D                      43          move.l A5, A6
-00001042  4EB8 101C                 44          jsr merge_sort
-00001046  2C5F                      45          move.l (SP)+, A6
-00001048                            46          * Merge the two sorted halves.
-00001048  4EB9 00001094             47          jsr merge
-0000104E                            48  ms_sorted
-0000104E  4CDF 6180                 49      movem.l (SP)+, D7/A0/A5/A6
-00001052  4E75                      50      rts
-00001054                            51  
-00001054                            52  * SUBROUTINE
-00001054                            53  * Pass a double pointer to the first node in A6.L.
-00001054                            54  * Returns the length of the list in D7.L.
-00001054                            55  length
-00001054  48E7 2020                 56      movem.l D2/A2, -(SP)
-00001058  4287                      57      clr.l D7
-0000105A  2416                      58      move.l (A6), D2
-0000105C                            59  length_loop
-0000105C                            60      * Check if next node is null.
-0000105C  4A82                      61      tst.l D2
-0000105E  6700 000C                 62      beq length_cleanup
-00001062                            63          * Increment counter move to next node.
-00001062  2442                      64          move.l D2, A2
-00001064  548A                      65          addq.l #node_next, A2
-00001066  2412                      66          move.l (A2), D2
-00001068  5287                      67          addq.l #1, D7
-0000106A  60F0                      68      bra length_loop
-0000106C                            69  length_cleanup
-0000106C  4CDF 0404                 70      movem.l (SP)+, D2/A2
-00001070  4E75                      71      rts
-00001072                            72      
-00001072                            73  * SUBROUTINE
-00001072                            74  * Pass a double pointer to the first node in A5.L.
-00001072                            75  * Pass the length of the list in D7.L.
-00001072                            76  * Sets the element before the midpoint's next to null.
-00001072                            77  * Returns the address of the midpoint in A6.L.
-00001072                            78  split
-00001072  48E7 0104                 79      movem.l D7/A5, -(SP)
-00001076  E28F                      80      lsr.l #1, D7
-00001078  2C4D                      81      move.l A5, A6
-0000107A                            82  split_loop
-0000107A  4A87                      83      tst.l D7
-0000107C  6700 000A                 84      beq split_cleanup
-00001080  2C56                      85          move.l (A6), A6
-00001082  548E                      86          addq.l #node_next, A6
-00001084  5387                      87          subq.l #1, D7
-00001086  60F2                      88      bra split_loop
-00001088                            89  split_cleanup
-00001088  2A56                      90      move.l (A6), A5
-0000108A  4296                      91      clr.l (A6)
-0000108C  2C4D                      92      move.l A5, A6
-0000108E  4CDF 2080                 93      movem.l (SP)+, D7/A5
-00001092  4E75                      94      rts
-00001094                            95      
-00001094                            96  * SUBROUTINE
-00001094                            97  * Pass a double pointer to the first nodes of each of two
-00001094                            98  * sorted lists to A5.L ("left") and A6.L ("right").
-00001094                            99  * Merges the lists and returns a double pointer to the
-00001094                           100  * merged list in A5.L.
-00001094                           101  * The contents of A6.L are undefined after calling this
-00001094                           102  * subroutine.
-00001094                           103  merge
-00001094  48E7 3034                104      movem.l D2/D3/A2/A3/A5, -(SP)
-00001098                           105  merge_loop
-00001098  4A95                     106      tst.l (A5)
-0000109A  6700 002A                107      beq merge_left_empty
-0000109E  4A96                     108      tst.l (A6)
-000010A0  6700 0026                109      beq merge_right_empty
-000010A4  2455                     110          move.l (A5), A2
-000010A6  2412                     111          move.l (A2), D2
-000010A8  2656                     112          move.l (A6), A3
-000010AA  2613                     113          move.l (A3), D3
-000010AC  B403                     114          cmp.b D3, D2
-000010AE  6F00 0010                115          ble merge_less_or_equal
-000010B2                           116  merge_greater
-000010B2                           117              * Store head of right list.
-000010B2  244E                     118              move.l A6, A2
-000010B4                           119              * Go to next on right list.
-000010B4  2C56                     120              move.l (A6), A6
-000010B6  548E                     121              addq.l #node_next, A6
-000010B8                           122              * Prepend stored node to left list.
-000010B8                           123              ** Change stored node's next to left list head.
-000010B8  2652                     124              move.l (A2), A3
-000010BA  548B                     125              addq.l #node_next, A3
-000010BC  2695                     126              move.l (A5), (A3)
-000010BE                           127              ** Make the left list head double pointer point to the stored node.
-000010BE  2A92                     128              move.l (A2), (A5)
-000010C0                           129              * We just moved back up one in the left list, so fallthrough to
-000010C0                           130              * move back down.
-000010C0                           131  merge_less_or_equal
-000010C0                           132              * Go to next on left list.
-000010C0  2A55                     133              move.l (A5), A5
-000010C2  548D                     134              addq.l #node_next, A5
-000010C4  60D2                     135          bra merge_loop
-000010C6                           136      
-000010C6                           137  merge_left_empty
-000010C6                           138      * Append the right list to the end of the left list.
-000010C6  2A96                     139      move.l (A6), (A5)
-000010C8                           140      * Fallthrough to merge_cleanup.
-000010C8                           141  merge_right_empty
-000010C8                           142      * Everything has been merged into the left list--nothing left to do.
-000010C8                           143      * Fallthrough to merge_cleanup.
-000010C8                           144  merge_cleanup
-000010C8  4CDF 2C0C                145      movem.l (SP)+, D2/D3/A2/A3/A5
-000010CC  4E75                     146      rts
-000010CE                           147      
-000010CE                           148  * SUBROUTINE
-000010CE                           149  * Prints the list.
-000010CE                           150  print_list
-000010CE  48E7 E040                151      movem.l D0/D1/D2/A1, -(SP)
-000010D2  43F9 000010F6            152      lea.l list_head, A1
-000010D8                           153  pl_loop
-000010D8  2411                     154      move.l (A1), D2
-000010DA  4A82                     155      tst.l D2
-000010DC  6700 000E                156      beq pl_cleanup
-000010E0  2251                     157      move.l (A1), A1
-000010E2  1211                     158      move.b (A1), D1
-000010E4  7006                     159      move.l #trap_p_char, D0
-000010E6  4E4F                     160      trap #15
-000010E8  5489                     161      add.l #node_next, A1
-000010EA  60EC                     162      bra pl_loop
-000010EC                           163  pl_cleanup
-000010EC  700D                     164      move.l #trap_p_nullterm_crlf, D0
-000010EE  4E4F                     165      trap #15
-000010F0  4CDF 0207                166      movem.l (SP)+, D0/D1/D2/A1
-000010F4  4E75                     167      rts
-000010F6                           168  
-000010F6                           169  * Put variables and constants here
-000010F6                           170  
-000010F6                           171  list_head ; pointer to the first node in the list
-000010F6= 000010FA                 172      dc.l b_node
-000010FA                           173  b_node
-000010FA= 62                       174      dc.b 'b'
-000010FC= 00001100                 175      dc.l a_node
-00001100                           176  a_node
-00001100= 61                       177      dc.b 'a'
-00001102= 00001112                 178      dc.l e_node
-00001106                           179  c_node
-00001106= 63                       180      dc.b 'c'
-00001108= 00000000                 181      dc.l 0
-0000110C                           182  d_node
-0000110C= 64                       183      dc.b 'd'
-0000110E= 00001106                 184      dc.l c_node
-00001112                           185  e_node
-00001112= 65                       186      dc.b 'e'
-00001114= 0000110C                 187      dc.l d_node
-00001118                           188      
-00001118                           189      END    START        ; last line of source
+0000103A  204F                      41          move.l SP, A0
+0000103C  2C48                      42          move.l A0, A6
+0000103E  4EB8 101C                 43          jsr merge_sort
+00001042  2C4D                      44          move.l A5, A6
+00001044  4EB8 101C                 45          jsr merge_sort
+00001048  2C48                      46          move.l A0, A6
+0000104A                            47          * Merge the two sorted halves.
+0000104A  4EB9 00001098             48          jsr merge
+00001050  2C5F                      49          move.l (SP)+, A6
+00001052                            50  ms_sorted
+00001052  4CDF 6180                 51      movem.l (SP)+, D7/A0/A5/A6
+00001056  4E75                      52      rts
+00001058                            53  
+00001058                            54  * SUBROUTINE
+00001058                            55  * Pass a double pointer to the first node in A6.L.
+00001058                            56  * Returns the length of the list in D7.L.
+00001058                            57  length
+00001058  48E7 2020                 58      movem.l D2/A2, -(SP)
+0000105C  4287                      59      clr.l D7
+0000105E  2416                      60      move.l (A6), D2
+00001060                            61  length_loop
+00001060                            62      * Check if next node is null.
+00001060  4A82                      63      tst.l D2
+00001062  6700 000C                 64      beq length_cleanup
+00001066                            65          * Increment counter move to next node.
+00001066  2442                      66          move.l D2, A2
+00001068  548A                      67          addq.l #node_next, A2
+0000106A  2412                      68          move.l (A2), D2
+0000106C  5287                      69          addq.l #1, D7
+0000106E  60F0                      70      bra length_loop
+00001070                            71  length_cleanup
+00001070  4CDF 0404                 72      movem.l (SP)+, D2/A2
+00001074  4E75                      73      rts
+00001076                            74      
+00001076                            75  * SUBROUTINE
+00001076                            76  * Pass a double pointer to the first node in A5.L.
+00001076                            77  * Pass the length of the list in D7.L.
+00001076                            78  * Sets the element before the midpoint's next to null.
+00001076                            79  * Returns the address of the midpoint in A6.L.
+00001076                            80  split
+00001076  48E7 0104                 81      movem.l D7/A5, -(SP)
+0000107A  E28F                      82      lsr.l #1, D7
+0000107C  2C4D                      83      move.l A5, A6
+0000107E                            84  split_loop
+0000107E  4A87                      85      tst.l D7
+00001080  6700 000A                 86      beq split_cleanup
+00001084  2C56                      87          move.l (A6), A6
+00001086  548E                      88          addq.l #node_next, A6
+00001088  5387                      89          subq.l #1, D7
+0000108A  60F2                      90      bra split_loop
+0000108C                            91  split_cleanup
+0000108C  2A56                      92      move.l (A6), A5
+0000108E  4296                      93      clr.l (A6)
+00001090  2C4D                      94      move.l A5, A6
+00001092  4CDF 2080                 95      movem.l (SP)+, D7/A5
+00001096  4E75                      96      rts
+00001098                            97      
+00001098                            98  * SUBROUTINE
+00001098                            99  * Pass a double pointer to the first nodes of each of two
+00001098                           100  * sorted lists to A5.L ("left") and A6.L ("right").
+00001098                           101  * Merges the lists and returns a double pointer to the
+00001098                           102  * merged list in A5.L.
+00001098                           103  * The contents of A6.L are undefined after calling this
+00001098                           104  * subroutine.
+00001098                           105  merge
+00001098  48E7 3034                106      movem.l D2/D3/A2/A3/A5, -(SP)
+0000109C                           107  merge_loop
+0000109C  4A95                     108      tst.l (A5)
+0000109E  6700 002A                109      beq merge_left_empty
+000010A2  4A96                     110      tst.l (A6)
+000010A4  6700 0026                111      beq merge_right_empty
+000010A8  2455                     112          move.l (A5), A2
+000010AA  1412                     113          move.b (A2), D2
+000010AC  2656                     114          move.l (A6), A3
+000010AE  1613                     115          move.b (A3), D3
+000010B0  B403                     116          cmp.b D3, D2
+000010B2  6F00 0010                117          ble merge_less_or_equal
+000010B6                           118  merge_greater
+000010B6                           119              * Store the "next" of the right list.
+000010B6  2456                     120              move.l (A6), A2
+000010B8  548A                     121              addq.l #node_next, A2
+000010BA                           122              * Insert the head of the right list into the left list.
+000010BA  2C56                     123              move.l (A6), A6
+000010BC  4EB9 000010D2            124              jsr insert
+000010C2                           125              * Replace the right list with the stored head.
+000010C2  2C4A                     126              move.l A2, A6
+000010C4                           127              * We just moved back up one in the left list, so fallthrough to
+000010C4                           128              * move back down.
+000010C4                           129  merge_less_or_equal
+000010C4                           130              * Go to next on left list.
+000010C4  2A55                     131              move.l (A5), A5
+000010C6  548D                     132              addq.l #node_next, A5
+000010C8  60D2                     133          bra merge_loop
+000010CA                           134      
+000010CA                           135  merge_left_empty
+000010CA                           136      * Append the right list to the end of the left list.
+000010CA  2A96                     137      move.l (A6), (A5)
+000010CC                           138      * Fallthrough to merge_cleanup.
+000010CC                           139  merge_right_empty
+000010CC                           140      * Everything has been merged into the left list--nothing left to do.
+000010CC                           141      * Fallthrough to merge_cleanup.
+000010CC                           142  merge_cleanup
+000010CC  4CDF 2C0C                143      movem.l (SP)+, D2/D3/A2/A3/A5
+000010D0  4E75                     144      rts
+000010D2                           145  
+000010D2                           146  * SUBROUTINE
+000010D2                           147  * Pass a pointer to the "next" field of the node to insert after to A5.
+000010D2                           148  * Pass a pointer to the node to insert to A6.
+000010D2                           149  insert
+000010D2  2F08                     150      move.l A0, -(SP)
+000010D4  204E                     151      move.l A6, A0
+000010D6  5488                     152      addq.l #node_next, A0   ; A0 now points to the "next" field of the node
+000010D8                           153                              ; we're inserting.
+000010D8                           154      * Move the node currently pointed to by the passed "next" to the "next"
+000010D8                           155      * of the node that's getting inserted before it.
+000010D8  2095                     156      move.l (A5), (A0)
+000010DA                           157      * Replace the moved node with the one passed to A6.
+000010DA  2A8E                     158      move.l A6, (A5)
+000010DC                           159      * Cleanup.
+000010DC  205F                     160      move.l (SP)+, A0
+000010DE  4E75                     161      rts
+000010E0                           162      
+000010E0                           163  * SUBROUTINE
+000010E0                           164  * Prints the list.
+000010E0                           165  print_list
+000010E0  48E7 E040                166      movem.l D0/D1/D2/A1, -(SP)
+000010E4  43F9 00001108            167      lea.l list_head, A1
+000010EA                           168  pl_loop
+000010EA  2411                     169      move.l (A1), D2
+000010EC  4A82                     170      tst.l D2
+000010EE  6700 000E                171      beq pl_cleanup
+000010F2  2251                     172      move.l (A1), A1
+000010F4  1211                     173      move.b (A1), D1
+000010F6  7006                     174      move.l #trap_p_char, D0
+000010F8  4E4F                     175      trap #15
+000010FA  5489                     176      add.l #node_next, A1
+000010FC  60EC                     177      bra pl_loop
+000010FE                           178  pl_cleanup
+000010FE  700D                     179      move.l #trap_p_nullterm_crlf, D0
+00001100  4E4F                     180      trap #15
+00001102  4CDF 0207                181      movem.l (SP)+, D0/D1/D2/A1
+00001106  4E75                     182      rts
+00001108                           183  
+00001108                           184  * Put variables and constants here
+00001108                           185  
+00001108                           186  list_head ; pointer to the first node in the list
+00001108= 0000110C                 187      dc.l b_node
+0000110C                           188  b_node
+0000110C= 62                       189      dc.b 'b'
+0000110E= 00001112                 190      dc.l a_node
+00001112                           191  a_node
+00001112= 61                       192      dc.b 'a'
+00001114= 00000000                 193      dc.l 0 ;e_node
+00001118                           194  c_node
+00001118= 63                       195      dc.b 'c'
+0000111A= 00000000                 196      dc.l 0
+0000111E                           197  d_node
+0000111E= 64                       198      dc.b 'd'
+00001120= 00001118                 199      dc.l c_node
+00001124                           200  e_node
+00001124= 65                       201      dc.b 'e'
+00001126= 0000111E                 202      dc.l d_node
+0000112A                           203      
+0000112A                           204      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -199,31 +214,32 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-A_NODE              1100
-B_NODE              10FA
-C_NODE              1106
-D_NODE              110C
-E_NODE              1112
-LENGTH              1054
-LENGTH_CLEANUP      106C
-LENGTH_LOOP         105C
-LIST_HEAD           10F6
-MERGE               1094
-MERGE_CLEANUP       10C8
-MERGE_GREATER       10B2
-MERGE_LEFT_EMPTY    10C6
-MERGE_LESS_OR_EQUAL  10C0
-MERGE_LOOP          1098
-MERGE_RIGHT_EMPTY   10C8
+A_NODE              1112
+B_NODE              110C
+C_NODE              1118
+D_NODE              111E
+E_NODE              1124
+INSERT              10D2
+LENGTH              1058
+LENGTH_CLEANUP      1070
+LENGTH_LOOP         1060
+LIST_HEAD           1108
+MERGE               1098
+MERGE_CLEANUP       10CC
+MERGE_GREATER       10B6
+MERGE_LEFT_EMPTY    10CA
+MERGE_LESS_OR_EQUAL  10C4
+MERGE_LOOP          109C
+MERGE_RIGHT_EMPTY   10CC
 MERGE_SORT          101C
-MS_SORTED           104E
+MS_SORTED           1052
 NODE_NEXT           2
-PL_CLEANUP          10EC
-PL_LOOP             10D8
-PRINT_LIST          10CE
-SPLIT               1072
-SPLIT_CLEANUP       1088
-SPLIT_LOOP          107A
+PL_CLEANUP          10FE
+PL_LOOP             10EA
+PRINT_LIST          10E0
+SPLIT               1076
+SPLIT_CLEANUP       108C
+SPLIT_LOOP          107E
 START               1000
 TRAP_P_CHAR         6
 TRAP_P_NULLTERM_CRLF  D
